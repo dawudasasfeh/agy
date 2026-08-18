@@ -1,0 +1,130 @@
+@model IEnumerable<AGY.Models.Review>
+@{
+    ViewData["Title"] = "Manage Reviews";
+}
+
+<div class="admin-layout mt-4 glass-card overflow-hidden">
+    <!-- Admin Sidebar -->
+    <div class="admin-sidebar">
+        <h5 class="text-white fw-bold mb-4 px-3"><i class="bi bi-gear-fill text-primary me-2"></i>Admin Panel</h5>
+        <a asp-controller="Admin" asp-action="Dashboard" class="sidebar-link">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+        <a asp-controller="Admin" asp-action="Products" class="sidebar-link">
+            <i class="bi bi-box-seam"></i> Products
+        </a>
+        <a asp-controller="Admin" asp-action="Categories" class="sidebar-link">
+            <i class="bi bi-tags"></i> Categories
+        </a>
+        <a asp-controller="Admin" asp-action="Orders" class="sidebar-link">
+            <i class="bi bi-receipt"></i> Orders
+        </a>
+        <a asp-controller="Admin" asp-action="Reviews" class="sidebar-link active">
+            <i class="bi bi-chat-text"></i> Reviews
+        </a>
+        <a asp-controller="Admin" asp-action="Testimonials" class="sidebar-link">
+            <i class="bi bi-star"></i> Testimonials
+        </a>
+        <hr class="border-secondary my-4">
+        <a asp-controller="Home" asp-action="Index" class="sidebar-link text-warning">
+            <i class="bi bi-box-arrow-left"></i> View Live Site
+        </a>
+    </div>
+
+    <!-- Admin Content Area -->
+    <div class="admin-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
+            <h2 class="fw-bold text-white mb-0">Manage Reviews & Comments</h2>
+            <span class="text-secondary" style="font-size: 0.9rem;">Approve or reject customer reviews</span>
+        </div>
+
+        <div class="glass-card p-4 animate-fade-in-up">
+            @if (!Model.Any())
+            {
+                <p class="text-secondary text-center py-4 mb-0">No reviews submitted yet.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Reviewer</th>
+                                <th>Rating</th>
+                                <th>Comments</th>
+                                <th>Submitted At</th>
+                                <th>Status</th>
+                                <th class="text-end" style="width: 180px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var rev in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold text-white" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                            @(rev.Product?.Name ?? "Deleted Product")
+                                        </div>
+                                        <small class="text-secondary">ID: #@rev.ProductId</small>
+                                    </td>
+                                    <td>
+                                        <div class="text-white fw-bold">@rev.UserFullName</div>
+                                        <small class="text-secondary">User: @rev.UserId</small>
+                                    </td>
+                                    <td>
+                                        <div class="text-warning" style="font-size: 0.85rem;">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (i <= rev.Rating)
+                                                {
+                                                    <i class="bi bi-star-fill"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-star"></i>
+                                                }
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="text-secondary" style="max-width: 250px; white-space: pre-wrap;" title="@rev.Content">
+                                            @rev.Content
+                                        </div>
+                                    </td>
+                                    <td>@rev.SubmittedAt.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        @if (rev.IsApproved)
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Approved</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Pending</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            @if (!rev.IsApproved)
+                                            {
+                                                <form asp-action="ApproveReview" asp-route-id="@rev.Id" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="badge-action badge-approve">Approve</button>
+                                                </form>
+                                            }
+                                            
+                                            <form asp-action="RejectReview" asp-route-id="@rev.Id" method="post" onsubmit="return confirm('Are you sure you want to reject and delete this review?');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="badge-action badge-reject">Reject</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

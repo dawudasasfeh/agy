@@ -1,0 +1,116 @@
+@model AGY.Models.Product
+@{
+    ViewData["Title"] = "Edit Product";
+}
+
+<div class="admin-layout mt-4 glass-card overflow-hidden">
+    <!-- Admin Sidebar -->
+    <div class="admin-sidebar">
+        <h5 class="text-white fw-bold mb-4 px-3"><i class="bi bi-gear-fill text-primary me-2"></i>Admin Panel</h5>
+        <a asp-controller="Admin" asp-action="Dashboard" class="sidebar-link">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+        <a asp-controller="Admin" asp-action="Products" class="sidebar-link active">
+            <i class="bi bi-box-seam"></i> Products
+        </a>
+        <a asp-controller="Admin" asp-action="Categories" class="sidebar-link">
+            <i class="bi bi-tags"></i> Categories
+        </a>
+        <a asp-controller="Admin" asp-action="Orders" class="sidebar-link">
+            <i class="bi bi-receipt"></i> Orders
+        </a>
+        <a asp-controller="Admin" asp-action="Reviews" class="sidebar-link">
+            <i class="bi bi-chat-text"></i> Reviews
+        </a>
+        <a asp-controller="Admin" asp-action="Testimonials" class="sidebar-link">
+            <i class="bi bi-star"></i> Testimonials
+        </a>
+        <hr class="border-secondary my-4">
+        <a asp-controller="Home" asp-action="Index" class="sidebar-link text-warning">
+            <i class="bi bi-box-arrow-left"></i> View Live Site
+        </a>
+    </div>
+
+    <!-- Admin Content Area -->
+    <div class="admin-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
+            <h2 class="fw-bold text-white mb-0">Edit Product</h2>
+            <a asp-action="Products" class="btn btn-camping-outline rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i>Back to List
+            </a>
+        </div>
+
+        <div class="glass-card p-4 animate-fade-in-up" style="max-width: 750px;">
+            <form asp-action="EditProduct" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" style="font-size: 0.9rem;"></div>
+
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label asp-for="Name" class="form-label text-secondary" style="font-size: 0.85rem;">Product Name</label>
+                        <input asp-for="Name" class="form-control bg-dark border-secondary text-white" required />
+                        <span asp-validation-for="Name" class="text-danger" style="font-size: 0.8rem;"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Price" class="form-label text-secondary" style="font-size: 0.85rem;">Price ($)</label>
+                        <input asp-for="Price" class="form-control bg-dark border-secondary text-white" type="number" step="0.01" required />
+                        <span asp-validation-for="Price" class="text-danger" style="font-size: 0.8rem;"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="StockQuantity" class="form-label text-secondary" style="font-size: 0.85rem;">Stock Quantity</label>
+                        <input asp-for="StockQuantity" class="form-control bg-dark border-secondary text-white" type="number" required />
+                        <span asp-validation-for="StockQuantity" class="text-danger" style="font-size: 0.8rem;"></span>
+                    </div>
+
+                    <div class="col-md-12 mb-3">
+                        <label asp-for="CategoryId" class="form-label text-secondary" style="font-size: 0.85rem;">Category</label>
+                        <select asp-for="CategoryId" class="form-select bg-dark border-secondary text-white" asp-items="ViewBag.CategoryId" required></select>
+                        <span asp-validation-for="CategoryId" class="text-danger" style="font-size: 0.8rem;"></span>
+                    </div>
+
+                    <div class="col-md-12 mb-3">
+                        <label asp-for="Description" class="form-label text-secondary" style="font-size: 0.85rem;">Product Description</label>
+                        <textarea asp-for="Description" class="form-control bg-dark border-secondary text-white" rows="5" required style="resize: none;"></textarea>
+                        <span asp-validation-for="Description" class="text-danger" style="font-size: 0.8rem;"></span>
+                    </div>
+
+                    <!-- Manage Current Images -->
+                    @if (Model.Images.Any())
+                    {
+                        <div class="col-md-12 mb-4">
+                            <label class="form-label text-secondary d-block" style="font-size: 0.85rem;">Current Images (Select to delete)</label>
+                            <div class="row g-3 bg-dark p-3 rounded border border-secondary">
+                                @foreach (var img in Model.Images)
+                                {
+                                    <div class="col-6 col-sm-4 col-md-3 text-center">
+                                        <div class="position-relative d-inline-block">
+                                            <img src="@img.ImageUrl" class="rounded border border-secondary" style="width: 100px; height: 100px; object-fit: cover;" />
+                                            <div class="form-check mt-1 d-flex justify-content-center">
+                                                <input class="form-check-input" type="checkbox" name="deleteImageIds" value="@img.Id" id="del-img-@img.Id" />
+                                                <label class="form-check-label text-danger ms-1" for="del-img-@img.Id" style="font-size: 0.75rem; font-weight: 600;">Delete</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="col-md-12 mb-4">
+                        <label class="form-label text-secondary" style="font-size: 0.85rem;">Upload Additional Images</label>
+                        <input type="file" name="imageFiles" accept="image/*" class="form-control bg-dark border-secondary text-white" multiple />
+                        <small class="text-muted d-block mt-1">* Only image files are allowed. You can select multiple images.</small>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-camping-primary w-100 py-2 mt-2">
+                    <i class="bi bi-save me-1"></i>Save Changes
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

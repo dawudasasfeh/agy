@@ -1,0 +1,190 @@
+@model IEnumerable<AGY.Models.Product>
+@{
+    ViewData["Title"] = "Shop Camping & Travel Gear";
+    var categories = ViewBag.Categories as List<AGY.Models.Category> ?? new List<AGY.Models.Category>();
+    var currentCategory = ViewBag.CurrentCategory as int?;
+    var searchQuery = ViewBag.SearchQuery as string;
+    var sortBy = ViewBag.SortBy as string;
+    var minPrice = ViewBag.MinPrice as decimal?;
+    var maxPrice = ViewBag.MaxPrice as decimal?;
+}
+
+<div class="container animate-fade-in-up">
+    <!-- Breadcrumb Header -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">Shop Gear</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold text-white"><i class="bi bi-compass text-primary me-2"></i>Wilderness Catalog</h2>
+        <p class="text-secondary">Equip yourself with premium travel luggage, camping tents, cooking gear, sleeping bags, and backpacks.</p>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar Filters -->
+        <div class="col-lg-3 mb-4">
+            <div class="glass-card p-4 sticky-top" style="top: 100px; z-index: 10;">
+                <h5 class="fw-bold mb-3 text-white"><i class="bi bi-sliders me-2 text-primary"></i>Filters</h5>
+                
+                <form asp-action="Index" method="get">
+                    <!-- Keep search query if present -->
+                    <input type="hidden" name="searchQuery" value="@searchQuery" />
+
+                    <!-- Sort -->
+                    <div class="mb-4">
+                        <label class="form-label text-secondary" style="font-size: 0.85rem;">Sort By</label>
+                        <select name="sortBy" class="form-select bg-dark border-secondary text-white" onchange="this.form.submit()">
+                            <!option value="newest" @(sortBy == "newest" ? "selected" : "")>Newest Additions</!option>
+                            <!option value="price_asc" @(sortBy == "price_asc" ? "selected" : "")>Price: Low to High</!option>
+                            <!option value="price_desc" @(sortBy == "price_desc" ? "selected" : "")>Price: High to Low</!option>
+                            <!option value="name_asc" @(sortBy == "name_asc" ? "selected" : "")>Alphabetical (A-Z)</!option>
+                        </select>
+                    </div>
+
+                    <!-- Category List -->
+                    <div class="mb-4">
+                        <label class="form-label text-secondary d-block mb-2" style="font-size: 0.85rem;">Categories</label>
+                        <div class="list-group list-group-flush">
+                            <a asp-action="Index" asp-route-searchQuery="@searchQuery" asp-route-sortBy="@sortBy" 
+                               class="list-group-item list-group-item-action bg-transparent text-secondary border-0 px-0 d-flex justify-content-between align-items-center @(!currentCategory.HasValue ? "text-primary fw-bold" : "")">
+                                <span>All Categories</span>
+                            </a>
+                            @foreach (var cat in categories)
+                            {
+                                <a asp-action="Index" asp-route-categoryId="@cat.Id" asp-route-searchQuery="@searchQuery" asp-route-sortBy="@sortBy"
+                                   class="list-group-item list-group-item-action bg-transparent text-secondary border-0 px-0 d-flex justify-content-between align-items-center @(currentCategory == cat.Id ? "text-primary fw-bold" : "")">
+                                    <span>@cat.Name</span>
+                                </a>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Price Range -->
+                    <div class="mb-4">
+                        <label class="form-label text-secondary" style="font-size: 0.85rem;">Price Range ($)</label>
+                        <div class="d-flex gap-2 align-items-center">
+                            <input type="number" name="minPrice" placeholder="Min" class="form-control bg-dark border-secondary text-white" value="@minPrice" style="font-size: 0.9rem;" />
+                            <span class="text-secondary">-</span>
+                            <input type="number" name="maxPrice" placeholder="Max" class="form-control bg-dark border-secondary text-white" value="@maxPrice" style="font-size: 0.9rem;" />
+                        </div>
+                    </div>
+
+                    <!-- Submit Filters -->
+                    <button type="submit" class="btn btn-camping-primary w-100 mb-2">Apply Filters</button>
+                    
+                    <!-- Clear Filters -->
+                    <a asp-action="Index" class="btn btn-camping-outline w-100 text-center text-decoration-none">Clear All</a>
+                </form>
+            </div>
+        </div>
+
+        <!-- Catalog Products Grid -->
+        <div class="col-lg-9">
+            <!-- Active Filter Badges -->
+            @if (currentCategory.HasValue || !string.IsNullOrEmpty(searchQuery) || minPrice.HasValue || maxPrice.HasValue)
+            {
+                <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
+                    <span class="text-secondary" style="font-size: 0.9rem;">Active filters:</span>
+                    @if (!string.IsNullOrEmpty(searchQuery))
+                    {
+                        <span class="badge bg-secondary px-3 py-2 rounded-pill">Search: "@searchQuery"</span>
+                    }
+                    @if (currentCategory.HasValue)
+                    {
+                        var activeCat = categories.FirstOrDefault(c => c.Id == currentCategory);
+                        if (activeCat != null)
+                        {
+                            <span class="badge bg-secondary px-3 py-2 rounded-pill">Category: @activeCat.Name</span>
+                        }
+                    }
+                    @if (minPrice.HasValue || maxPrice.HasValue)
+                    {
+                        <span class="badge bg-secondary px-3 py-2 rounded-pill">Price: $@(minPrice ?? 0) - $@(maxPrice ?? 9999)</span>
+                    }
+                </div>
+            }
+
+            @if (!Model.Any())
+            {
+                <div class="glass-card p-5 text-center my-4">
+                    <i class="bi bi-search text-secondary" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3 fw-bold">No Products Found</h4>
+                    <p class="text-secondary">Try adjusting your filters or searching for something else.</p>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @foreach (var product in Model)
+                    {
+                        var mainImage = product.Images.FirstOrDefault()?.ImageUrl ?? "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80";
+                        var rating = product.Reviews.Any() ? product.Reviews.Average(r => r.Rating) : 5.0;
+                        var commentsCount = product.Reviews.Count();
+
+                        <div class="col-md-6 col-lg-4 col-sm-6">
+                            <div class="glass-card product-card">
+                                <!-- Wishlist heart trigger -->
+                                <a href="#" class="wishlist-btn-pos btn-wishlist-ajax" data-product-id="@product.Id" title="Add to Wishlist">
+                                    <i class="bi bi-heart"></i>
+                                </a>
+
+                                <div class="product-image-container" onclick="window.location.href='@Url.Action("Details", new { id = product.Id })'" style="cursor: pointer;">
+                                    <img src="@mainImage" alt="@product.Name" onerror="this.src='https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80'" />
+                                    @if (product.StockQuantity <= 0)
+                                    {
+                                        <span class="product-card-badge bg-danger">Out of Stock</span>
+                                    }
+                                    else if (product.StockQuantity <= 3)
+                                    {
+                                        <span class="product-card-badge bg-warning text-dark">Low Stock: @product.StockQuantity</span>
+                                    }
+                                </div>
+
+                                <div class="product-card-body">
+                                    <span class="product-card-category">@product.Category?.Name</span>
+                                    <h5 class="product-card-title" onclick="window.location.href='@Url.Action("Details", new { id = product.Id })'" style="cursor: pointer; color: white;">
+                                        @product.Name
+                                    </h5>
+                                    
+                                    <div class="product-card-rating">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= Math.Round(rating))
+                                            {
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-star text-muted"></i>
+                                            }
+                                        }
+                                        <span class="text-secondary ms-1">(@commentsCount)</span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center mt-auto">
+                                        <span class="product-card-price">$@product.Price.ToString("N2")</span>
+                                    </div>
+
+                                    @if (product.StockQuantity > 0)
+                                    {
+                                        <button class="btn btn-add-to-cart btn-add-to-cart-ajax" data-product-id="@product.Id">
+                                            <i class="bi bi-cart-plus me-2"></i>Add to Cart
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-add-to-cart disabled border-secondary text-secondary" disabled>
+                                            <i class="bi bi-slash-circle me-2"></i>Out of Stock
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

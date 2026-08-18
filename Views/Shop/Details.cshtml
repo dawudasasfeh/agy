@@ -1,0 +1,257 @@
+@model AGY.Models.Product
+@{
+    ViewData["Title"] = Model.Name;
+    var approvedReviews = ViewBag.ApprovedReviews as List<AGY.Models.Review> ?? new List<AGY.Models.Review>();
+    var averageRating = ViewBag.AverageRating as double? ?? 5.0;
+    var relatedProducts = ViewBag.RelatedProducts as List<AGY.Models.Product> ?? new List<AGY.Models.Product>();
+    var mainImage = Model.Images.FirstOrDefault()?.ImageUrl ?? "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80";
+}
+
+<div class="container animate-fade-in-up">
+    <!-- Breadcrumbs -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Shop" asp-action="Index" class="text-decoration-none">Shop</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">@Model.Name</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Product Main Info Row -->
+    <div class="row mb-5">
+        <!-- Image Gallery Column -->
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <!-- Main Display -->
+            <div class="product-detail-img-main mb-3">
+                <img id="product-main-image" src="@mainImage" alt="@Model.Name" onerror="this.src='https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80'" />
+            </div>
+            
+            <!-- Thumbnails -->
+            @if (Model.Images.Count > 1)
+            {
+                <div class="d-flex gap-2">
+                    @foreach (var img in Model.Images)
+                    {
+                        <div class="product-detail-thumb @(img.ImageUrl == mainImage ? "active" : "")" data-large="@img.ImageUrl">
+                            <img src="@img.ImageUrl" alt="Product thumbnail" onerror="this.src='https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80'" />
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Specs & Purchase Column -->
+        <div class="col-lg-6">
+            <div class="glass-card p-5 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <span class="badge bg-secondary px-3 py-2 text-uppercase mb-3">@Model.Category?.Name</span>
+                    <h2 class="fw-bold text-white mb-2">@Model.Name</h2>
+                    
+                    <!-- Rating Summary -->
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="text-warning me-2" style="font-size: 1.1rem;">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= Math.Round(averageRating))
+                                {
+                                    <i class="bi bi-star-fill"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-star"></i>
+                                }
+                            }
+                        </div>
+                        <span class="text-secondary" style="font-size: 0.9rem;">
+                            (@approvedReviews.Count approved reviews) - Score: @averageRating.ToString("F1") / 5.0
+                        </span>
+                    </div>
+
+                    <!-- Price -->
+                    <h3 class="fw-bold text-primary mb-4">$@Model.Price.ToString("N2")</h3>
+
+                    <!-- Stock Status -->
+                    <div class="mb-4">
+                        <strong>Availability:</strong>
+                        @if (Model.StockQuantity <= 0)
+                        {
+                            <span class="text-danger fw-bold ms-2"><i class="bi bi-slash-circle me-1"></i>Out of Stock</span>
+                        }
+                        else if (Model.StockQuantity <= 3)
+                        {
+                            <span class="text-warning fw-bold ms-2"><i class="bi bi-exclamation-triangle me-1"></i>Low Stock (@Model.StockQuantity remaining)</span>
+                        }
+                        else
+                        {
+                            <span class="text-success fw-bold ms-2"><i class="bi bi-check-circle me-1"></i>In Stock (@Model.StockQuantity available)</span>
+                        }
+                    </div>
+
+                    <!-- Description -->
+                    <p class="text-secondary" style="line-height: 1.7;">
+                        @Model.Description
+                    </p>
+                </div>
+
+                <div class="border-top border-secondary pt-4 mt-4">
+                    <!-- Purchase Controls -->
+                    @if (Model.StockQuantity > 0)
+                    {
+                        <div class="d-flex gap-3 align-items-center flex-wrap">
+                            <div class="quantity-control">
+                                <button type="button" onclick="const input = document.getElementById('quantity-input'); if(input.value > 1) input.value--">-</button>
+                                <input type="number" id="quantity-input" value="1" min="1" max="@Model.StockQuantity" readonly />
+                                <button type="button" onclick="const input = document.getElementById('quantity-input'); if(input.value < @Model.StockQuantity) input.value++">+</button>
+                            </div>
+
+                            <button class="btn btn-camping-primary flex-grow-1 py-2 btn-add-to-cart-ajax" data-product-id="@Model.Id">
+                                <i class="bi bi-cart-plus me-2"></i>Add to Cart
+                            </button>
+
+                            <button class="btn btn-camping-outline btn-wishlist-ajax" data-product-id="@Model.Id" title="Toggle Wishlist">
+                                <i class="bi bi-heart"></i>
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex gap-3 align-items-center">
+                            <button class="btn btn-secondary disabled w-100 py-2" disabled>
+                                <i class="bi bi-slash-circle me-2"></i>Currently Unavailable
+                            </button>
+                            <button class="btn btn-camping-outline btn-wishlist-ajax" data-product-id="@Model.Id" title="Toggle Wishlist">
+                                <i class="bi bi-heart"></i>
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    @if (relatedProducts.Any())
+    {
+        <div class="mb-5">
+            <h3 class="fw-bold text-white mb-4"><i class="bi bi-compass text-primary me-2"></i>Related Camp Gear</h3>
+            <div class="row g-4">
+                @foreach (var related in relatedProducts)
+                {
+                    var rImage = related.Images.FirstOrDefault()?.ImageUrl ?? "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80";
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <div class="glass-card product-card">
+                            <div class="product-image-container" onclick="window.location.href='@Url.Action("Details", new { id = related.Id })'" style="cursor: pointer;">
+                                <img src="@rImage" alt="@related.Name" onerror="this.src='https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80'" />
+                            </div>
+                            <div class="product-card-body">
+                                <h6 class="product-card-title mb-1" onclick="window.location.href='@Url.Action("Details", new { id = related.Id })'" style="cursor: pointer; color: white;">
+                                    @related.Name
+                                </h6>
+                                <span class="product-card-price mt-2 d-block">$@related.Price.ToString("N2")</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <hr class="border-secondary my-5">
+
+    <!-- Reviews Section -->
+    <div class="row mb-5">
+        <!-- Reviews list column -->
+        <div class="col-lg-7 mb-4 mb-lg-0">
+            <h3 class="fw-bold text-white mb-4"><i class="bi bi-chat-text text-primary me-2"></i>Reviews & Comments</h3>
+            
+            @if (!approvedReviews.Any())
+            {
+                <div class="glass-card p-4 text-center text-secondary">
+                    <i class="bi bi-chat-left-dots fs-1 mb-2"></i>
+                    <p>No approved reviews for this gear yet. Be the first to share your thoughts!</p>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-3">
+                    @foreach (var review in approvedReviews)
+                    {
+                        <div class="review-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="review-author text-white">@review.UserFullName</div>
+                                <div class="review-date">@review.SubmittedAt.ToString("MMMM dd, yyyy")</div>
+                            </div>
+                            <div class="text-warning my-1" style="font-size: 0.85rem;">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= review.Rating)
+                                    {
+                                        <i class="bi bi-star-fill"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-star"></i>
+                                    }
+                                }
+                            </div>
+                            <p class="review-content">@review.Content</p>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Write a review column -->
+        <div class="col-lg-5">
+            <div class="glass-card p-4">
+                <h4 class="fw-bold text-white mb-3"><i class="bi bi-star text-primary me-2"></i>Rate this Gear</h4>
+                <p class="text-secondary" style="font-size: 0.9rem;">
+                    Have you used this product in the field? Let us know what you think. Your feedback helps the camping community.
+                </p>
+
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <form asp-action="SubmitReview" method="post" class="mt-4">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="productId" value="@Model.Id" />
+                        <input type="hidden" id="selected-rating" name="rating" value="5" />
+
+                        <!-- Interactive Star Selector -->
+                        <div class="mb-3">
+                            <label class="form-label text-secondary d-block mb-1" style="font-size: 0.85rem;">Your Rating:</label>
+                            <div class="star-rating-interactive">
+                                <i class="bi bi-star-fill active" data-value="1"></i>
+                                <i class="bi bi-star-fill active" data-value="2"></i>
+                                <i class="bi bi-star-fill active" data-value="3"></i>
+                                <i class="bi bi-star-fill active" data-value="4"></i>
+                                <i class="bi bi-star-fill active" data-value="5"></i>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="reviewContent" class="form-label text-secondary" style="font-size: 0.85rem;">Your Comments:</label>
+                            <textarea id="reviewContent" name="content" class="form-control bg-dark border-secondary text-white" rows="4" required 
+                                      placeholder="Write your review here..." style="font-size: 0.95rem; resize: none;"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-camping-primary w-100 py-2">
+                            <i class="bi bi-send-fill me-2"></i>Submit Review
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <div class="alert alert-dark border-secondary bg-dark text-center mt-4 mb-0" role="alert">
+                        <i class="bi bi-lock-fill text-warning fs-3 mb-2 d-block"></i>
+                        <p class="text-secondary mb-3" style="font-size: 0.85rem;">You must be logged in to review this product.</p>
+                        <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="/Shop/Details/@Model.Id" class="btn btn-camping-primary btn-sm px-4">
+                            Sign In to Write
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

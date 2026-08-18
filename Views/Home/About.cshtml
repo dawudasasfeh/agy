@@ -1,0 +1,112 @@
+@model IEnumerable<AGY.Models.Testimonial>
+@{
+    ViewData["Title"] = "About Us & Testimonials";
+}
+
+<div class="container animate-fade-in-up">
+    <!-- About section -->
+    <div class="row align-items-center mb-5 py-3">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <span class="badge mb-3 px-3 py-2 text-uppercase fw-bold" style="background: rgba(255,107,53,0.15); color: var(--color-primary); letter-spacing: 2px;">
+                Who We Are
+            </span>
+            <h2 class="fw-bold text-white mb-3">Antigravity Gear & Travel</h2>
+            <p class="text-secondary" style="font-size: 1.05rem; line-height: 1.7;">
+                We are a premier provider of high-quality wilderness camping and travel gear. Founded by outdoor enthusiasts, our mission is to supply gear that empowers adventurers to explore the most challenging terrains in comfort and safety.
+            </p>
+            <p class="text-secondary" style="font-size: 1.05rem; line-height: 1.7;">
+                Our products are carefully engineered to meet professional standards, utilizing lightweight, weather-resistant, and heavy-duty materials. Whether you are scaling an alpine ridge, embarking on a weekend road trip, or backpacking across continents, Antigravity Gear has you covered.
+            </p>
+            <div class="p-3 bg-dark rounded border border-secondary mt-4">
+                <h6 class="text-white fw-bold mb-2"><i class="bi bi-people-fill text-primary me-2"></i>Meet Project Team 5:</h6>
+                <div class="row text-secondary" style="font-size: 0.9rem;">
+                    <div class="col-sm-4"><strong>Bashar</strong><br>Lead Architecture</div>
+                    <div class="col-sm-4"><strong>Shorouq</strong><br>UX & Frontend</div>
+                    <div class="col-sm-4"><strong>Dawood</strong><br>Backend & Security</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 text-center">
+            <!-- Styling highlight showcasing campfire/backpack scenery -->
+            <div class="rounded-3 overflow-hidden border border-secondary p-2 glass-card mx-auto" style="max-width: 450px;">
+                <img src="https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?auto=format&fit=crop&w=600&q=80" alt="Campsite under stars" class="img-fluid rounded" />
+            </div>
+        </div>
+    </div>
+
+    <hr class="border-secondary my-5">
+
+    <!-- Testimonials section -->
+    <div class="row">
+        <!-- Display testimonials list -->
+        <div class="col-lg-7 mb-5">
+            <h3 class="fw-bold text-white mb-4"><i class="bi bi-chat-heart text-primary me-2"></i>What Our Community Says</h3>
+            
+            @if (!Model.Any())
+            {
+                <div class="glass-card p-4 text-center text-secondary">
+                    <i class="bi bi-chat-square-dots fs-1 mb-2"></i>
+                    <p>No testimonials display at the moment. Be the first to share your adventure story!</p>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-4">
+                    @foreach (var test in Model)
+                    {
+                        <div class="glass-card p-4">
+                            <p class="text-secondary italic" style="font-style: italic; font-size: 0.95rem;">
+                                "@test.Content"
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-secondary">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold me-2" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                        @(test.UserFullName.Length > 0 ? test.UserFullName.Substring(0, 1) : "E")
+                                    </div>
+                                    <span class="text-white fw-bold" style="font-size: 0.9rem;">@test.UserFullName</span>
+                                </div>
+                                <span class="text-secondary" style="font-size: 0.8rem;">@test.SubmittedAt.ToString("MMM dd, yyyy")</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Submit new testimonial form -->
+        <div class="col-lg-5">
+            <div class="glass-card p-4">
+                <h4 class="fw-bold text-white mb-3"><i class="bi bi-pencil-square text-primary me-2"></i>Share Your Story</h4>
+                <p class="text-secondary" style="font-size: 0.9rem;">
+                    Tell us about your experience using our tents, backpacks, luggage, sleeping bags, or portable stoves. Your review helps other campers make the right choice.
+                </p>
+                
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <form asp-action="SubmitTestimonial" method="post" class="mt-4">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label for="content" class="form-label text-secondary" style="font-size: 0.85rem;">Your Testimonial:</label>
+                            <textarea id="content" name="content" class="form-control bg-dark border-secondary text-white" rows="5" required 
+                                      placeholder="Write your adventure story here..." style="font-size: 0.95rem; resize: none;"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-camping-primary w-100 py-2">
+                            <i class="bi bi-send-fill me-2"></i>Submit for Approval
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <div class="alert alert-dark border-secondary bg-dark text-center mt-4 mb-0" role="alert">
+                        <i class="bi bi-lock-fill text-warning fs-3 mb-2 d-block"></i>
+                        <p class="text-secondary mb-3" style="font-size: 0.85rem;">You must be logged in to submit a testimonial review.</p>
+                        <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="/Home/About" class="btn btn-camping-primary btn-sm px-4">
+                            Sign In to Write
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

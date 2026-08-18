@@ -1,0 +1,210 @@
+@model IEnumerable<AGY.Models.Product>
+@{
+    ViewData["Title"] = "Premium Camping & Travel Gear";
+    var categories = ViewBag.Categories as List<AGY.Models.Category> ?? new List<AGY.Models.Category>();
+    var testimonials = ViewBag.Testimonials as List<AGY.Models.Testimonial> ?? new List<AGY.Models.Testimonial>();
+}
+
+<!-- Hero Section -->
+<section class="hero-section text-white d-flex align-items-center mb-5">
+    <div class="container animate-fade-in-up">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <span class="badge mb-3 px-3 py-2 text-uppercase fw-bold" style="background: rgba(255,107,53,0.15); color: var(--color-primary); letter-spacing: 2px;">
+                    <i class="bi bi-fire me-1 text-warning"></i>Gear Up For Adventure
+                </span>
+                <h1 class="hero-title">Elevate Your Next<br><span>Outdoor Escape</span></h1>
+                <p class="hero-lead">
+                    Discover professional-grade travel luggage, robust camping tents, lightweight cooking gear, ergonomic backpacks, and insulated sleeping bags built to survive the elements.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a asp-controller="Shop" asp-action="Index" class="btn btn-camping-primary">
+                        <i class="bi bi-cart3 me-2"></i>Explore Shop
+                    </a>
+                    <a asp-controller="Home" asp-action="About" class="btn btn-camping-outline">
+                        Read Testimonials <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-lg-5 mt-5 mt-lg-0 text-center">
+                <!-- Visual highlight: Glass card showcasing camper essentials -->
+                <div class="glass-card p-4 mx-auto style-card-glow" style="max-width: 380px; text-align: left;">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-25 rounded-circle p-2 me-3">
+                            <i class="bi bi-award text-primary fs-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-white">Wilderness Approved</h5>
+                            <small class="text-secondary">Tested by outdoor specialists</small>
+                        </div>
+                    </div>
+                    <hr class="border-secondary">
+                    <ul class="list-unstyled mb-0 text-secondary" style="font-size: 0.9rem; line-height: 2;">
+                        <li><i class="bi bi-check-lg text-success me-2"></i><strong>Waterproof Tents</strong> (خيام تخييم)</li>
+                        <li><i class="bi bi-check-lg text-success me-2"></i><strong>Sub-Zero Sleeping Bags</strong> (أكياس نوم)</li>
+                        <li><i class="bi bi-check-lg text-success me-2"></i><strong>Heavy-Duty Backpacks</strong> (حقائب ظهر)</li>
+                        <li><i class="bi bi-check-lg text-success me-2"></i><strong>Compact Stoves</strong> (أدوات طهي متنقلة)</li>
+                        <li><i class="bi bi-check-lg text-success me-2"></i><strong>TSA Travel Luggage</strong> (حقائب سفر)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="container mb-5 py-4">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-white">Browse by Category</h2>
+        <p class="text-secondary" style="max-width: 500px; margin: 0 auto;">Select from our curated collections of premium camping essentials and luggage.</p>
+    </div>
+    
+    <div class="row g-4 justify-content-center">
+        @foreach (var cat in categories)
+        {
+            // Pick a default category icon based on name
+            var icon = "bi-box-seam";
+            if (cat.Name.Contains("Tent")) icon = "bi-houses-fill";
+            else if (cat.Name.Contains("Sleeping")) icon = "bi-moon-stars-fill";
+            else if (cat.Name.Contains("Backpack")) icon = "bi-backpack2-fill";
+            else if (cat.Name.Contains("Cooking")) icon = "bi-egg-fried";
+            else if (cat.Name.Contains("Luggage")) icon = "bi-luggage-fill";
+
+            <div class="col-md-4 col-sm-6 col-lg-2.4 flex-grow-1">
+                <div class="category-card" onclick="window.location.href='@Url.Action("Index", "Shop", new { categoryId = cat.Id })'">
+                    <!-- If category image is local or URL, we fallback cleanly -->
+                    <img src="@(string.IsNullOrEmpty(cat.ImageUrl) ? "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80" : cat.ImageUrl)" 
+                         alt="@cat.Name" onerror="this.src='https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80'" />
+                    <div class="category-card-overlay">
+                        <i class="bi @icon text-primary fs-3 mb-2"></i>
+                        <h5 class="category-card-title text-white">@cat.Name</h5>
+                        <p class="category-card-desc mb-0">Explore Collection</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+<section class="container mb-5 py-4">
+    <div class="d-flex justify-content-between align-items-end mb-5">
+        <div>
+            <h2 class="fw-bold text-white">Featured Camp Gear</h2>
+            <p class="text-secondary mb-0">Explore our top-rated, best-selling wilderness gear.</p>
+        </div>
+        <a asp-controller="Shop" asp-action="Index" class="btn btn-camping-outline rounded-pill px-4">
+            View All Products <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+    </div>
+
+    <div class="row g-4">
+        @foreach (var product in Model)
+        {
+            var mainImage = product.Images.FirstOrDefault()?.ImageUrl ?? "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80";
+            var rating = product.Reviews.Any() ? product.Reviews.Average(r => r.Rating) : 5.0;
+            var commentsCount = product.Reviews.Count();
+
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="glass-card product-card">
+                    <!-- Wishlist button (AJAX) -->
+                    <a href="#" class="wishlist-btn-pos btn-wishlist-ajax" data-product-id="@product.Id" title="Add to Wishlist">
+                        <i class="bi bi-heart"></i>
+                    </a>
+
+                    <div class="product-image-container" onclick="window.location.href='@Url.Action("Details", "Shop", new { id = product.Id })'" style="cursor: pointer;">
+                        <img src="@mainImage" alt="@product.Name" onerror="this.src='https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=400&q=80'" />
+                        @if (product.StockQuantity <= 0)
+                        {
+                            <span class="product-card-badge bg-danger">Out of Stock</span>
+                        }
+                        else if (product.StockQuantity <= 3)
+                        {
+                            <span class="product-card-badge bg-warning text-dark">Low Stock: @product.StockQuantity</span>
+                        }
+                    </div>
+
+                    <div class="product-card-body">
+                        <span class="product-card-category">@product.Category?.Name</span>
+                        <h5 class="product-card-title" onclick="window.location.href='@Url.Action("Details", "Shop", new { id = product.Id })'" style="cursor: pointer; color: white;">
+                            @product.Name
+                        </h5>
+                        
+                        <div class="product-card-rating">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= Math.Round(rating))
+                                {
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-star text-muted"></i>
+                                }
+                            }
+                            <span class="text-secondary ms-1">(@commentsCount)</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <span class="product-card-price">$@product.Price.ToString("N2")</span>
+                        </div>
+
+                        @if (product.StockQuantity > 0)
+                        {
+                            <button class="btn btn-add-to-cart btn-add-to-cart-ajax" data-product-id="@product.Id">
+                                <i class="bi bi-cart-plus me-2"></i>Add to Cart
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-add-to-cart disabled border-secondary text-secondary" disabled>
+                                <i class="bi bi-slash-circle me-2"></i>Out of Stock
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+@if (testimonials.Any())
+{
+    <section class="container mb-5 py-4">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold text-white">What Explorers Say</h2>
+            <p class="text-secondary" style="max-width: 500px; margin: 0 auto;">Read stories and testimonials submitted by our campers and travellers.</p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            @foreach (var test in testimonials)
+            {
+                <div class="col-md-4">
+                    <div class="glass-card p-4 h-100 d-flex flex-column">
+                        <i class="bi bi-quote text-primary fs-1 mb-2"></i>
+                        <p class="text-secondary flex-grow-1 italic" style="font-size: 0.95rem; font-style: italic;">
+                            "@test.Content"
+                        </p>
+                        <hr class="border-secondary mt-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold text-uppercase me-3" style="width: 40px; height: 40px; font-size: 0.9rem;">
+                                @(test.UserFullName.Length > 0 ? test.UserFullName.Substring(0, 1) : "E")
+                            </div>
+                            <div>
+                                <h6 class="mb-0 text-white fw-bold">@test.UserFullName</h6>
+                                <small class="text-secondary">Verified Explorer</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="text-center mt-4">
+            <a asp-action="About" class="btn btn-camping-outline rounded-pill px-4">
+                View All Testimonials & Submit Yours
+            </a>
+        </div>
+    </section>
+}

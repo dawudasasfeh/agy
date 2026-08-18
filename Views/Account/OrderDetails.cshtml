@@ -1,0 +1,160 @@
+@model AGY.Models.Order
+@{
+    ViewData["Title"] = $"Invoice #{Model.Id}";
+}
+
+<div class="container animate-fade-in-up">
+    <!-- Navigation Breadcrumb -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Home</a></li>
+                @if (User.IsInRole("Admin"))
+                {
+                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Orders" class="text-decoration-none">Manage Orders</a></li>
+                }
+                else
+                {
+                    <li class="breadcrumb-item"><a asp-action="Orders" class="text-decoration-none">My Orders</a></li>
+                }
+                <li class="breadcrumb-item active text-white" aria-current="page">Invoice #@Model.Id</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Print Button and Title -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="bi bi-file-earmark-spreadsheet me-2 text-primary"></i>Invoice Details</h2>
+        <button onclick="window.print()" class="btn btn-camping-outline rounded-pill px-4">
+            <i class="bi bi-printer me-2"></i>Print Invoice
+        </button>
+    </div>
+
+    <!-- Invoice Layout Box -->
+    <div class="invoice-box glass-card p-5 mb-5">
+        <!-- Invoice Header -->
+        <div class="row border-bottom border-secondary pb-4 mb-4">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <h4 class="navbar-brand-camping mb-1"><i class="bi bi-compass-fill me-2"></i>ANTIGRAVITY GEAR</h4>
+                <p class="text-secondary mb-0" style="font-size: 0.9rem;">Team 5: Bashar, Shorouq, Dawood</p>
+                <p class="text-secondary" style="font-size: 0.9rem;">Camping & Travel Gear E-Store</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <h3 class="fw-bold text-white mb-1">INVOICE</h3>
+                <p class="text-secondary mb-1"><strong>Invoice No:</strong> #INV-@Model.Id.ToString("D5")</p>
+                <p class="text-secondary mb-1"><strong>Date:</strong> @Model.OrderDate.ToString("MMMM dd, yyyy")</p>
+                <div>
+                    <strong>Status:</strong>
+                    @if (Model.Status == "Processing")
+                    {
+                        <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Processing</span>
+                    }
+                    else if (Model.Status == "Completed")
+                    {
+                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Completed</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Cancelled</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer & Shipping Details -->
+        <div class="row mb-5">
+            <div class="col-md-6 mb-4 mb-md-0">
+                <h6 class="text-uppercase fw-bold text-primary mb-3">Bill To:</h6>
+                <h5 class="text-white fw-bold mb-1">@Model.FullName</h5>
+                <p class="text-secondary mb-1"><i class="bi bi-envelope me-2"></i>@Model.Email</p>
+                <p class="text-secondary mb-0"><i class="bi bi-telephone me-2"></i>@Model.Phone</p>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-uppercase fw-bold text-primary mb-3">Shipping Destination:</h6>
+                <p class="text-white mb-0" style="white-space: pre-line;">
+                    <i class="bi bi-geo-alt me-2 text-danger"></i>@Model.ShippingAddress
+                </p>
+            </div>
+        </div>
+
+        <!-- Order Items Table -->
+        <h6 class="text-uppercase fw-bold text-primary mb-3">Purchased Items</h6>
+        <div class="table-responsive mb-4">
+            <table class="table table-custom align-middle">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Gear Item</th>
+                        <th class="text-center">Price</th>
+                        <th class="text-center">Quantity</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int index = 1;
+                    }
+                    @foreach (var item in Model.OrderItems)
+                    {
+                        <tr>
+                            <td>@index</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    @if (item.Product != null && item.Product.Images != null && item.Product.Images.Any())
+                                    {
+                                        <img src="@item.Product.Images.First().ImageUrl" alt="@item.Product.Name" class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover; border: 1px solid var(--border-color);" />
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded me-3 bg-secondary d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; border: 1px solid var(--border-color);">
+                                            <i class="bi bi-image" style="color: #475569;"></i>
+                                        </div>
+                                    }
+                                    <div>
+                                        <h6 class="text-white fw-bold mb-0">@(item.Product?.Name ?? "Deleted Product")</h6>
+                                        <span class="text-secondary" style="font-size: 0.8rem;">Item ID: #@item.ProductId</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">$@item.Price.ToString("N2")</td>
+                            <td class="text-center">@item.Quantity</td>
+                            <td class="text-end text-white fw-bold">$@((item.Price * item.Quantity).ToString("N2"))</td>
+                        </tr>
+                        index++;
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Invoice Summary -->
+        <div class="row justify-content-end">
+            <div class="col-md-5">
+                <div class="border-top border-secondary pt-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Subtotal:</span>
+                        <span class="text-white">$@Model.TotalAmount.ToString("N2")</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Shipping & Handling:</span>
+                        <span class="text-success">FREE</span>
+                    </div>
+                    <div class="d-flex justify-content-between border-top border-secondary pt-2 mt-2">
+                        <span class="text-white fw-bold">Grand Total:</span>
+                        <span class="text-primary fw-bold fs-4">$@Model.TotalAmount.ToString("N2")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment simulated badge -->
+        <div class="border-top border-secondary pt-4 mt-5">
+            <div class="alert alert-dark border-secondary bg-dark d-flex align-items-center" role="alert">
+                <i class="bi bi-shield-check text-success fs-4 me-3"></i>
+                <div class="text-secondary" style="font-size: 0.85rem;">
+                    <strong>Payment status: PAID via secure external payment provider.</strong><br>
+                    Thank you for your order! If you have any questions regarding this invoice, please contact support (Team 5: Bashar, Shorouq, Dawood).
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

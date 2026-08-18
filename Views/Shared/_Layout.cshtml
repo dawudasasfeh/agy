@@ -1,0 +1,171 @@
+@using AGY.Helpers
+@using AGY.Models
+@using Microsoft.AspNetCore.Identity
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@inject AGY.Data.ApplicationDbContext DbContext
+@inject UserManager<IdentityUser> UserManager
+
+@{
+    // Get live cart count
+    var session = HttpContextAccessor.HttpContext?.Session;
+    var cartList = session?.GetObjectFromJson<List<CartItemViewModel>>("Cart") ?? new List<CartItemViewModel>();
+    var cartCount = cartList.Sum(item => item.Quantity);
+
+    // Get live wishlist count if logged in
+    var wishlistCount = 0;
+    if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        var currentUserId = UserManager.GetUserId(User);
+        if (currentUserId != null)
+        {
+            wishlistCount = DbContext.WishlistItems.Count(w => w.UserId == currentUserId);
+        }
+    }
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - AGY Camping & Travel Gear</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Custom Style System -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body data-success-message="@TempData["SuccessMessage"]" data-error-message="@TempData["ErrorMessage"]">
+    <div class="main-wrapper">
+        <!-- Glassmorphic Custom Header -->
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-3">
+                <div class="container">
+                    <a class="navbar-brand navbar-brand-camping" asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-compass-fill me-2"></i>ANTIGRAVITY GEAR
+                    </a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCamping" 
+                            aria-controls="navbarCamping" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    
+                    <div class="collapse navbar-collapse" id="navbarCamping">
+                        <!-- Navigation Links -->
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-camping" asp-controller="Home" asp-action="Index">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-camping" asp-controller="Shop" asp-action="Index">Shop Gear</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-camping" asp-controller="Home" asp-action="About">About & Testimonials</a>
+                            </li>
+                            
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link nav-link-camping dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-shield-lock-fill me-1 text-warning"></i>Admin Board
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-dark border-secondary bg-dark" aria-labelledby="adminDropdown">
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Products"><i class="bi bi-box-seam me-2"></i>Products</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Categories"><i class="bi bi-tags me-2"></i>Categories</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Orders"><i class="bi bi-receipt me-2"></i>Orders</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Reviews"><i class="bi bi-chat-text me-2"></i>Reviews & Comments</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Testimonials"><i class="bi bi-star me-2"></i>Testimonials</a></li>
+                                    </ul>
+                                </li>
+                            }
+                        </ul>
+
+                        <!-- Partial Search Box -->
+                        <form class="d-flex me-3 position-relative" asp-controller="Shop" asp-action="Index" method="get" style="width: 250px;">
+                            <input class="form-control bg-dark border-secondary text-white rounded-pill px-3 py-1" 
+                                   type="search" placeholder="Search gear or category..." aria-label="Search" name="searchQuery" style="font-size: 0.9rem;">
+                            <button class="btn text-white position-absolute end-0 top-50 translate-middle-y me-1" type="submit" style="background: none; border: none;">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </form>
+
+                        <!-- Cart, Wishlist and Authentication Links -->
+                        <div class="d-flex align-items-center gap-3">
+                            <a asp-controller="Wishlist" asp-action="Index" class="btn position-relative p-2 text-white" title="Wishlist">
+                                <i class="bi bi-heart" style="font-size: 1.25rem;"></i>
+                                <span class="badge-badge" id="wishlist-badge" style="display: @(wishlistCount > 0 ? "inline-block" : "none")">@wishlistCount</span>
+                            </a>
+                            
+                            <a asp-controller="Cart" asp-action="Index" class="btn position-relative p-2 text-white me-2" title="Cart">
+                                <i class="bi bi-cart3" style="font-size: 1.25rem;"></i>
+                                <span class="badge-badge" id="cart-badge" style="display: @(cartCount > 0 ? "inline-block" : "none")">@cartCount</span>
+                            </a>
+                            
+                            <partial name="_LoginPartial" />
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Main Body Content -->
+        <main role="main" class="container my-5 flex-grow-1">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- Camping Premium Footer -->
+    <footer class="footer text-white py-5 mt-auto">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-5 mb-4">
+                    <h5 class="navbar-brand-camping mb-3"><i class="bi bi-compass-fill me-2"></i>ANTIGRAVITY GEAR</h5>
+                    <p class="text-secondary" style="font-size: 0.9rem;">
+                        Your ultimate companion for wilderness exploration. We provide premium travel luggage, camping tents, portable cooking gear, backpacks, and sleeping bags. Made for adventurers, by adventurers.
+                    </p>
+                    <div class="d-flex gap-3 mt-3">
+                        <a href="#" class="text-secondary hover-primary"><i class="bi bi-facebook fs-5"></i></a>
+                        <a href="#" class="text-secondary hover-primary"><i class="bi bi-instagram fs-5"></i></a>
+                        <a href="#" class="text-secondary hover-primary"><i class="bi bi-twitter fs-5"></i></a>
+                        <a href="#" class="text-secondary hover-primary"><i class="bi bi-youtube fs-5"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-4">
+                    <h6 class="text-uppercase fw-bold mb-3" style="color: var(--color-primary);">Quick Links</h6>
+                    <ul class="list-unstyled text-secondary" style="font-size: 0.9rem; line-height: 2;">
+                        <li><a asp-controller="Home" asp-action="Index" class="text-secondary text-decoration-none">Home Landing</a></li>
+                        <li><a asp-controller="Shop" asp-action="Index" class="text-secondary text-decoration-none">Shop Categories</a></li>
+                        <li><a asp-controller="Home" asp-action="About" class="text-secondary text-decoration-none">About Us & Reviews</a></li>
+                        <li><a asp-controller="Cart" asp-action="Index" class="text-secondary text-decoration-none">Shopping Cart</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <h6 class="text-uppercase fw-bold mb-3" style="color: var(--color-primary);">Project Team (Team 5)</h6>
+                    <p class="text-secondary mb-1" style="font-size: 0.9rem;"><strong>Developers:</strong> Bashar, Shorouq, Dawood</p>
+                    <p class="text-secondary mb-3" style="font-size: 0.9rem;"><strong>Theme:</strong> Camping & Travel Gear (مستلزمات الرحلات والتخييم)</p>
+                    <div class="border-top border-secondary pt-3 mt-3">
+                        <span class="text-secondary" style="font-size: 0.8rem;">&copy; @DateTime.UtcNow.Year - AGY E-Commerce App. All rights reserved.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

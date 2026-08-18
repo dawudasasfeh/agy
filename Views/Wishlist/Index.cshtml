@@ -1,0 +1,126 @@
+@model IEnumerable<AGY.Models.WishlistItem>
+@{
+    ViewData["Title"] = "My Wishlist";
+}
+
+<div class="container animate-fade-in-up">
+    <!-- Breadcrumbs -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Shop" asp-action="Index" class="text-decoration-none">Shop</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">My Wishlist</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold text-white"><i class="bi bi-heart-fill text-primary me-2"></i>My Saved Gear</h2>
+        <p class="text-secondary">Keep track of your favorite camp gear and easily add them to your cart when ready.</p>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="glass-card p-5 text-center my-4">
+            <i class="bi bi-heart-break text-secondary" style="font-size: 4rem;"></i>
+            <h3 class="mt-3 fw-bold">Your Wishlist is Empty</h3>
+            <p class="text-secondary">Tap the heart icon on any gear item to save it here for later.</p>
+            <a asp-controller="Shop" asp-action="Index" class="btn btn-camping-primary mt-3">
+                <i class="bi bi-compass me-1"></i>Start Exploring Gear
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="glass-card p-4">
+            <div class="table-responsive">
+                <table class="table table-custom align-middle">
+                    <thead>
+                        <tr>
+                            <th>Gear Item</th>
+                            <th>Price</th>
+                            <th>Availability</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            var product = item.Product;
+                            if (product != null)
+                            {
+                                var mainImage = product.Images.FirstOrDefault()?.ImageUrl ?? "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=100&q=80";
+                                <tr>
+                                    <!-- Gear Info -->
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="@mainImage" alt="@product.Name" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover; border: 1px solid var(--border-color);" />
+                                            <div>
+                                                <h6 class="text-white fw-bold mb-0">
+                                                    <a asp-controller="Shop" asp-action="Details" asp-route-id="@product.Id" class="text-white text-decoration-none hover-primary">
+                                                        @product.Name
+                                                    </a>
+                                                </h6>
+                                                <span class="text-secondary" style="font-size: 0.8rem;">Category: @product.Category?.Name</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    
+                                    <!-- Price -->
+                                    <td><strong class="text-primary">$@product.Price.ToString("N2")</strong></td>
+                                    
+                                    <!-- Availability -->
+                                    <td>
+                                        @if (product.StockQuantity <= 0)
+                                        {
+                                            <span class="text-danger fw-bold"><i class="bi bi-slash-circle me-1"></i>Out of Stock</span>
+                                        }
+                                        else if (product.StockQuantity <= 3)
+                                        {
+                                            <span class="text-warning fw-bold"><i class="bi bi-exclamation-triangle me-1"></i>Low Stock (@product.StockQuantity left)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-success fw-bold"><i class="bi bi-check-circle me-1"></i>In Stock</span>
+                                        }
+                                    </td>
+                                    
+                                    <!-- Actions -->
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2 align-items-center">
+                                            <!-- Add to Cart (AJAX) -->
+                                            @if (product.StockQuantity > 0)
+                                            {
+                                                <button class="btn btn-camping-primary btn-sm rounded-pill px-3 btn-add-to-cart-ajax" data-product-id="@product.Id">
+                                                    <i class="bi bi-cart-plus me-1"></i>Add to Cart
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-secondary btn-sm rounded-pill px-3 disabled" disabled>
+                                                    <i class="bi bi-slash-circle me-1"></i>Out of Stock
+                                                </button>
+                                            }
+
+                                            <!-- View Details -->
+                                            <a asp-controller="Shop" asp-action="Details" asp-route-id="@product.Id" class="btn btn-camping-outline btn-sm rounded-pill px-3">
+                                                View Gear
+                                            </a>
+
+                                            <!-- Remove from Wishlist Form -->
+                                            <form asp-action="Remove" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="productId" value="@product.Id" />
+                                                <button type="submit" class="btn text-danger p-1" title="Remove from Wishlist">
+                                                    <i class="bi bi-heartbreak-fill fs-5"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

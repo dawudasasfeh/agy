@@ -1,0 +1,136 @@
+@model IEnumerable<AGY.Models.CartItemViewModel>
+@{
+    ViewData["Title"] = "Shopping Cart";
+}
+
+<div class="container animate-fade-in-up">
+    <!-- Breadcrumb Header -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Shop" asp-action="Index" class="text-decoration-none">Shop</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page">Shopping Cart</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold text-white"><i class="bi bi-cart3 text-primary me-2"></i>Your Camp Cart</h2>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="glass-card p-5 text-center my-4">
+            <i class="bi bi-cart-x text-secondary" style="font-size: 4rem;"></i>
+            <h3 class="mt-3 fw-bold">Your Cart is Empty</h3>
+            <p class="text-secondary">Looks like you haven't added any camping gear to your cart yet.</p>
+            <a asp-controller="Shop" asp-action="Index" class="btn btn-camping-primary mt-3">
+                <i class="bi bi-compass me-1"></i>Start Exploring Gear
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <!-- Items Column -->
+            <div class="col-lg-8 mb-4">
+                <div class="glass-card p-4">
+                    <div class="table-responsive">
+                        <table class="table table-custom align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th class="text-center">Quantity</th>
+                                    <th class="text-end">Subtotal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr id="cart-row-@item.ProductId">
+                                        <!-- Product Info -->
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=100&q=80" : item.ImageUrl)" 
+                                                     alt="@item.ProductName" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover; border: 1px solid var(--border-color);" />
+                                                <div>
+                                                    <h6 class="text-white fw-bold mb-0">@item.ProductName</h6>
+                                                    <span class="text-secondary" style="font-size: 0.8rem;">ID: #@item.ProductId</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        
+                                        <!-- Price -->
+                                        <td>$@item.Price.ToString("N2")</td>
+                                        
+                                        <!-- Interactive Qty -->
+                                        <td class="text-center">
+                                            <div class="quantity-control mx-auto">
+                                                <button type="button" class="btn-qty-dec" data-product-id="@item.ProductId">-</button>
+                                                <input type="number" id="qty-@item.ProductId" value="@item.Quantity" min="1" readonly />
+                                                <button type="button" class="btn-qty-inc" data-product-id="@item.ProductId">+</button>
+                                            </div>
+                                        </td>
+                                        
+                                        <!-- Subtotal -->
+                                        <td class="text-end text-white fw-bold">$<span id="subtotal-@item.ProductId">@item.TotalPrice.ToString("N2")</span></td>
+                                        
+                                        <!-- Actions -->
+                                        <td class="text-center">
+                                            <form asp-action="RemoveFromCart" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="productId" value="@item.ProductId" />
+                                                <button type="submit" class="btn text-danger p-1" title="Remove from Cart">
+                                                    <i class="bi bi-trash-fill fs-5"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Column -->
+            <div class="col-lg-4">
+                <div class="glass-card p-4">
+                    <h4 class="fw-bold text-white mb-4 border-bottom border-secondary pb-3">Order Summary</h4>
+                    
+                    <div class="d-flex justify-content-between mb-3 text-secondary">
+                        <span>Cart Subtotal:</span>
+                        <span>$<span id="cart-summary-subtotal">@ViewBag.CartTotal.ToString("N2")</span></span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 text-secondary">
+                        <span>Shipping & Handling:</span>
+                        <span class="text-success">FREE</span>
+                    </div>
+                    <hr class="border-secondary">
+                    <div class="d-flex justify-content-between mb-4">
+                        <span class="text-white fw-bold">Est. Total:</span>
+                        <span class="text-primary fw-bold fs-4">$<span id="cart-summary-total">@ViewBag.CartTotal.ToString("N2")</span></span>
+                    </div>
+
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <a asp-controller="Checkout" asp-action="Index" class="btn btn-camping-primary w-100 py-3 mb-2">
+                            <i class="bi bi-shield-lock-fill me-2"></i>Proceed to Checkout
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="/Cart/Index" class="btn btn-camping-primary w-100 py-3 mb-2">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In to Checkout
+                        </a>
+                        <p class="text-center text-muted mt-2 mb-0" style="font-size: 0.8rem;">* Log in is required before payment.</p>
+                    }
+                    
+                    <a asp-controller="Shop" asp-action="Index" class="btn btn-camping-outline w-100 py-2 mt-2">
+                        <i class="bi bi-arrow-left me-1"></i>Continue Shopping
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

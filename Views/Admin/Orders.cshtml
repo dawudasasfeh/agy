@@ -1,0 +1,141 @@
+@model IEnumerable<AGY.Models.Order>
+@{
+    ViewData["Title"] = "Manage Orders";
+    var statusFilter = ViewBag.StatusFilter as string;
+    var userFilter = ViewBag.UserFilter as string;
+}
+
+<div class="admin-layout mt-4 glass-card overflow-hidden">
+    <!-- Admin Sidebar -->
+    <div class="admin-sidebar">
+        <h5 class="text-white fw-bold mb-4 px-3"><i class="bi bi-gear-fill text-primary me-2"></i>Admin Panel</h5>
+        <a asp-controller="Admin" asp-action="Dashboard" class="sidebar-link">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+        <a asp-controller="Admin" asp-action="Products" class="sidebar-link">
+            <i class="bi bi-box-seam"></i> Products
+        </a>
+        <a asp-controller="Admin" asp-action="Categories" class="sidebar-link">
+            <i class="bi bi-tags"></i> Categories
+        </a>
+        <a asp-controller="Admin" asp-action="Orders" class="sidebar-link active">
+            <i class="bi bi-receipt"></i> Orders
+        </a>
+        <a asp-controller="Admin" asp-action="Reviews" class="sidebar-link">
+            <i class="bi bi-chat-text"></i> Reviews
+        </a>
+        <a asp-controller="Admin" asp-action="Testimonials" class="sidebar-link">
+            <i class="bi bi-star"></i> Testimonials
+        </a>
+        <hr class="border-secondary my-4">
+        <a asp-controller="Home" asp-action="Index" class="sidebar-link text-warning">
+            <i class="bi bi-box-arrow-left"></i> View Live Site
+        </a>
+    </div>
+
+    <!-- Admin Content Area -->
+    <div class="admin-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
+            <h2 class="fw-bold text-white mb-0">Manage Orders</h2>
+            <span class="text-secondary" style="font-size: 0.9rem;">Monitor and fulfill customer requests</span>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="glass-card p-3 mb-4 animate-fade-in-up">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label text-secondary" style="font-size: 0.85rem;">Filter by Status</label>
+                    <select name="statusFilter" class="form-select bg-dark border-secondary text-white">
+                        <!option value="" @(string.IsNullOrEmpty(statusFilter) ? "selected" : "")>All Statuses</!option>
+                        <!option value="Processing" @(statusFilter == "Processing" ? "selected" : "")>Processing</!option>
+                        <!option value="Completed" @(statusFilter == "Completed" ? "selected" : "")>Completed</!option>
+                        <!option value="Cancelled" @(statusFilter == "Cancelled" ? "selected" : "")>Cancelled</!option>
+                    </select>
+                </div>
+                
+                <div class="col-md-5">
+                    <label class="form-label text-secondary" style="font-size: 0.85rem;">Filter by User Email</label>
+                    <input type="text" name="userFilter" class="form-control bg-dark border-secondary text-white" placeholder="Search customer email..." value="@userFilter" />
+                </div>
+
+                <div class="col-md-3">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-camping-primary flex-grow-1">Filter</button>
+                        <a asp-action="Orders" class="btn btn-camping-outline">Clear</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="glass-card p-4 animate-fade-in-up" style="animation-delay: 0.1s;">
+            @if (!Model.Any())
+            {
+                <p class="text-secondary text-center py-4 mb-0">No matching orders found.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer Details</th>
+                                <th>Order Date</th>
+                                <th>Total Price</th>
+                                <th>Current Status</th>
+                                <th class="text-center" style="width: 200px;">Update Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model)
+                            {
+                                <tr>
+                                    <td><strong class="text-white">#@order.Id</strong></td>
+                                    <td>
+                                        <div class="fw-bold text-white">@order.FullName</div>
+                                        <small class="text-secondary">@order.Email | @order.Phone</small>
+                                    </td>
+                                    <td>@order.OrderDate.ToString("MMMM dd, yyyy")</td>
+                                    <td><strong class="text-primary">$@order.TotalAmount.ToString("N2")</strong></td>
+                                    <td>
+                                        @if (order.Status == "Processing")
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Processing</span>
+                                        }
+                                        else if (order.Status == "Completed")
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Completed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Cancelled</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <!-- Status Update Form -->
+                                        <form asp-action="UpdateOrderStatus" method="post" class="d-inline-flex gap-2">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="orderId" value="@order.Id" />
+                                            <select name="status" class="form-select form-select-sm bg-dark border-secondary text-white" onchange="this.form.submit()" style="font-size: 0.8rem;">
+                                                <!option value="Processing" @(order.Status == "Processing" ? "selected" : "")>Processing</!option>
+                                                <!option value="Completed" @(order.Status == "Completed" ? "selected" : "")>Completed</!option>
+                                                <!option value="Cancelled" @(order.Status == "Cancelled" ? "selected" : "")>Cancelled</!option>
+                                            </select>
+                                        </form>
+                                    </td>
+                                    <td class="text-end">
+                                        <a asp-controller="Account" asp-action="OrderDetails" asp-route-id="@order.Id" class="btn btn-camping-outline btn-sm rounded-pill px-3">
+                                            Invoice
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
